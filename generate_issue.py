@@ -142,7 +142,8 @@ user_prompt = f"""
 過去号との被りを避け、Markdown形式のみで出力してください。
 """
 
-model_name = "gemini-3.6-flash"
+# 正しい最新のモデル名（gemini-2.5-flash）に変更
+model_name = "gemini-2.5-flash"
 response = None
 
 print(f"--- モデル {model_name} で執筆開始 ---")
@@ -162,8 +163,8 @@ for attempt in range(1, 4):
         time.sleep(10)
 
 if not response or not response.text:
-    print("生成をスキップしてデプロイを継続します。")
-    sys.exit(0)
+    print("❌ 記事生成に失敗しました。")
+    sys.exit(1)
 
 # 6. 東京の街歩き・書斎風のライフスタイル写真2枚を生成
 os.makedirs("public/images", exist_ok=True)
