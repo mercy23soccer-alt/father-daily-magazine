@@ -2,7 +2,8 @@ name: Publish Father Daily Magazine
 
 on:
   schedule:
-    - cron: '30 21 * * *' # 毎朝 JST 6:30（奥様・ご主人用と時間をずらして自動実行）
+    # 日本時間 毎朝 06:00（UTC 21:00）に毎日自動実行
+    - cron: '0 21 * * *'
   workflow_dispatch:
 
 permissions:
@@ -10,11 +11,21 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -22,35 +33,42 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python tools
-        run: pip install google-genai requests pillow
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-genai requests pillow
 
       - name: Generate Issue
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python generate_issue.py
+        run: |
+          python generate_issue.py
 
       - name: Commit article and photos
         run: |
-          git config --global user.name "Daily Bot"
-          git config --global user.email "bot@example.com"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "Publish Issue $(date +%Y-%m-%d)" || exit 0
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-publish daily issue [skip ci]" && git push origin main)
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Build Web Magazine
-        run: |
-          npm install
-          npx astro build
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build Astro site
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: './dist'
 
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
