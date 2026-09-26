@@ -26,9 +26,8 @@ const latest = postList[0];
         --vermilion: #b23a22;
         --matcha: #3d5a45;
         --amber: #c47b27;
-        --purple: #6b4c7d;
         --border-color: #1f2421;
-        --box-bg: #f2eee6;
+        --box-bg: #f4efe6;
       }
 
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,9 +35,9 @@ const latest = postList[0];
       body {
         color: var(--ink);
         font-family: "Shippori Mincho", "Noto Sans JP", serif;
-        line-height: 2.1;
-        letter-spacing: 0.03em;
-        font-size: 1.05rem; /* スマホでも読みやすいゆったり設計 */
+        line-height: 2.15;
+        letter-spacing: 0.035em;
+        font-size: 1.05rem; /* 散歩の達人をゆったり読むサイズ */
         padding: 2.5rem 1rem 5rem;
         -webkit-font-smoothing: antialiased;
       }
@@ -70,7 +69,6 @@ const latest = postList[0];
         font-family: "Noto Sans JP", sans-serif;
         font-size: 0.75rem;
         font-weight: 700;
-        letter-spacing: 0.05em;
       }
 
       .masthead {
@@ -185,7 +183,6 @@ const latest = postList[0];
 
       #comedy { border-left-color: var(--vermilion) !important; }
       #apple-pie { border-left-color: var(--amber) !important; }
-      #curiosity { border-left-color: var(--purple) !important; }
       #baby { border-left-color: var(--matcha) !important; }
 
       .article-content h3 {
@@ -199,6 +196,33 @@ const latest = postList[0];
         text-align: justify;
         font-size: 1.05rem;
         color: #2b2f2d;
+      }
+
+      /* 散歩の達人風：上品な案内カードリンク */
+      .article-content .guide-link,
+      .article-content a {
+        display: inline-block;
+        background: #ffffff;
+        color: var(--ink);
+        border: 1.5px solid var(--border-color);
+        padding: 0.35rem 0.85rem;
+        margin: 0.4rem 0.4rem 0.4rem 0;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: 4px;
+        box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        transition: 0.15s;
+        word-break: break-all;
+      }
+      .article-content .guide-link:hover,
+      .article-content a:hover {
+        background: var(--vermilion);
+        color: #ffffff;
+        border-color: var(--vermilion);
+        transform: translateY(-1px);
+        box-shadow: 3px 3px 0px rgba(0,0,0,0.15);
       }
 
       .magazine-photo-box { margin: 3.5rem 0; }
@@ -218,17 +242,6 @@ const latest = postList[0];
         text-align: right;
       }
 
-      .article-content a {
-        color: var(--vermilion);
-        text-decoration: none;
-        font-weight: 700;
-        border-bottom: 1.5px solid var(--vermilion);
-        padding-bottom: 1px;
-        transition: 0.12s;
-      }
-      .article-content a:hover {
-        background: #fbeee8;
-      }
       .article-content ul, .article-content ol { margin: 1.2rem 0 1.8rem 1.4rem; }
       .article-content li { margin-bottom: 0.8rem; font-size: 1.02rem; }
 
@@ -390,7 +403,7 @@ const latest = postList[0];
 
         const rawText = content.innerText
           .replace(/https?:\/\/\S+/g, "")
-          .replace(/[#*`_■§➔▲★🗺🏛▶📻📊🥧🧭📚👶🏢📈]/g, "")
+          .replace(/[#*`_■§➔▲★🗺🏛▶📻📊🥧🧭📚👶🏢📈↗]/g, "")
           .trim();
 
         chunks = splitTextIntoChunks(rawText, 90);
