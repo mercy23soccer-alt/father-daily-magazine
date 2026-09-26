@@ -1,0 +1,56 @@
+name: Publish Father Daily Magazine
+
+on:
+  schedule:
+    - cron: '30 21 * * *' # 毎朝 JST 6:30（奥様・ご主人用と時間をずらして自動実行）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python tools
+        run: pip install google-genai requests pillow
+
+      - name: Generate Issue
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python generate_issue.py
+
+      - name: Commit article and photos
+        run: |
+          git config --global user.name "Daily Bot"
+          git config --global user.email "bot@example.com"
+          git add -A
+          git commit -m "Publish Issue $(date +%Y-%m-%d)" || exit 0
+          git push
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Web Magazine
+        run: |
+          npm install
+          npx astro build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
