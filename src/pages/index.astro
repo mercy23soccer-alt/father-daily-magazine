@@ -70,6 +70,24 @@ const latest = postList[0];
         font-size: 0.75rem;
         font-weight: 700;
       }
+      .archive-btn-top {
+        text-decoration: none;
+        color: var(--ink);
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: var(--box-bg);
+        border: 1.5px solid var(--border-color);
+        padding: 0.25rem 0.7rem;
+        border-radius: 3px;
+        box-shadow: 2px 2px 0px rgba(0,0,0,0.08);
+        transition: 0.15s;
+      }
+      .archive-btn-top:hover {
+        background: var(--vermilion);
+        color: #ffffff;
+        border-color: var(--vermilion);
+      }
 
       .masthead {
         text-align: center;
@@ -103,7 +121,7 @@ const latest = postList[0];
         color: var(--sub-ink);
       }
 
-      /* 【新設】本日の散歩カルテ・グラフィカルカード */
+      /* 本日の散歩カルテ・グラフィカルカード */
       .walk-dispatch-card {
         margin: 1.8rem 0 1.2rem;
         background: #ffffff;
@@ -236,7 +254,7 @@ const latest = postList[0];
         color: #2b2f2d;
       }
 
-      /* 案内カードボタン */
+      /* 散歩の達人風：案内カードボタン */
       .article-content .guide-link,
       .article-content a {
         display: inline-block;
@@ -309,8 +327,8 @@ const latest = postList[0];
           <span class="badge-tokyo">TOKYO JOURNAL</span>
           <span>FLÂNEUR & CHRONICLE</span>
         </div>
-        <div>
-          <span style="font-family: 'Noto Sans JP', sans-serif; font-size: 0.8rem;">豊島区 · {latest ? latest.frontmatter.date : ""}</span>
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <a href="/father-daily-magazine/archive/" class="archive-btn-top">📚 バックナンバー一覧 ↗</a>
         </div>
       </div>
 
@@ -320,7 +338,7 @@ const latest = postList[0];
         <p class="brand-kanji">東 京 逍 遥 録</p>
       </header>
 
-      <!-- 【新設】絵文字と記号であしらった本日の散歩カルテ -->
+      <!-- 絵文字と記号であしらった本日の散歩カルテ -->
       <section class="walk-dispatch-card">
         <div class="dispatch-header">
           <span>❖ 本日の東京逍遥手帖（WEATHER & FIELD）</span>
@@ -328,7 +346,7 @@ const latest = postList[0];
         </div>
         <div class="dispatch-grid">
           <div class="dispatch-item">
-            <span>🗓</span>
+            <span>🗓 日付:</span>
             <span class="dispatch-val">{latest ? latest.frontmatter.date : "本日の号"}</span>
           </div>
           <div class="dispatch-item">
