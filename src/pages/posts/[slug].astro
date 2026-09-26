@@ -1,0 +1,255 @@
+---
+export async function getStaticPaths() {
+  const posts = import.meta.glob("../../content/posts/*.md", { eager: true });
+  return Object.entries(posts).map(([path, post]: [string, any]) => {
+    const slug = path.split("/").pop().replace(".md", "");
+    return {
+      params: { slug },
+      props: { post },
+    };
+  });
+}
+
+const { post } = Astro.props;
+const { Content } = post;
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{post.frontmatter.date} 号 | THE TOKYO FLÂNEUR</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Sans+JP:wght@400;500;700;800&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet" />
+    
+    <style is:inline>
+      :root {
+        --paper: #fbf9f5;
+        --desk: #eae6df;
+        --ink: #1f2421;
+        --sub-ink: #555b57;
+        --indigo: #1d3557;
+        --vermilion: #b23a22;
+        --matcha: #3d5a45;
+        --amber: #c47b27;
+        --border-color: #1f2421;
+        --box-bg: #f4efe6;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; background-color: var(--desk); }
+      body {
+        color: var(--ink);
+        font-family: "Shippori Mincho", "Noto Sans JP", serif;
+        line-height: 2.15;
+        letter-spacing: 0.035em;
+        font-size: 1.05rem;
+        padding: 2.5rem 1rem 5rem;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .magazine-sheet {
+        max-width: 880px;
+        margin: 0 auto;
+        background-color: var(--paper);
+        border: 2px solid var(--border-color);
+        box-shadow: 10px 10px 0px rgba(31, 36, 33, 0.15);
+        padding: clamp(2rem, 5vw, 4.5rem);
+      }
+
+      .top-folio {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.8rem;
+      }
+      .back-nav-link {
+        color: var(--ink);
+        text-decoration: none;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: var(--box-bg);
+        border: 1px solid var(--border-color);
+        padding: 0.25rem 0.65rem;
+        border-radius: 3px;
+        transition: 0.12s;
+      }
+      .back-nav-link:hover {
+        background: var(--vermilion);
+        color: #fff;
+      }
+
+      .masthead {
+        text-align: center;
+        padding: 3rem 0 2rem;
+        border-bottom: 3px double var(--border-color);
+      }
+      .brand-logo {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(2.6rem, 8vw, 5rem);
+        font-weight: 600;
+        font-style: italic;
+        color: var(--ink);
+      }
+      .brand-kanji {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.35em;
+        margin-top: 0.5rem;
+        color: var(--sub-ink);
+      }
+
+      .walk-dispatch-card {
+        margin: 1.8rem 0 2rem;
+        background: #ffffff;
+        border: 2px solid var(--border-color);
+        box-shadow: 4px 4px 0px rgba(0,0,0,0.08);
+        padding: 1.2rem 1.4rem;
+        border-radius: 4px;
+      }
+      .dispatch-header {
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        color: var(--vermilion);
+        border-bottom: 1.5px solid #eee;
+        padding-bottom: 0.4rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        justify-content: space-between;
+      }
+      .dispatch-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.88rem;
+      }
+      .dispatch-item { display: flex; align-items: center; gap: 0.4rem; }
+      .dispatch-val { font-weight: 700; }
+      .target-ward-badge {
+        background: var(--indigo);
+        color: #ffffff;
+        padding: 0.15rem 0.65rem;
+        font-size: 0.95rem;
+        font-weight: 800;
+        border-radius: 3px;
+      }
+
+      .article-content h2 {
+        font-family: "Cormorant Garamond", "Shippori Mincho", serif;
+        font-size: 1.38rem;
+        font-weight: 700;
+        background: var(--box-bg);
+        border-left: 6px solid var(--indigo);
+        border-bottom: 1.5px solid var(--border-color);
+        padding: 0.6rem 1rem;
+        margin: 4.5rem 0 1.6rem;
+      }
+      .article-content p {
+        margin-bottom: 1.6rem;
+        text-align: justify;
+        font-size: 1.05rem;
+      }
+      .article-content a {
+        display: inline-block;
+        background: #ffffff;
+        color: var(--ink);
+        border: 1.5px solid var(--border-color);
+        padding: 0.35rem 0.85rem;
+        margin: 0.4rem 0.4rem 0.4rem 0;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: 4px;
+        box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+      }
+      .article-content a:hover {
+        background: var(--vermilion);
+        color: #ffffff;
+      }
+      .magazine-photo-box { margin: 3.5rem 0; }
+      .magazine-photo-box img {
+        width: 100%;
+        height: auto;
+        border: 2px solid var(--border-color);
+      }
+      .photo-caption {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 0.82rem;
+        letter-spacing: 0.15em;
+        color: var(--sub-ink);
+        margin-top: 0.6rem;
+        text-align: right;
+      }
+
+      .colophon {
+        margin-top: 5rem;
+        border-top: 2px solid var(--border-color);
+        padding-top: 2rem;
+        text-align: center;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 0.85rem;
+        color: var(--sub-ink);
+      }
+    </style>
+  </head>
+  <body>
+    <article class="magazine-sheet">
+      <div class="top-folio">
+        <a href="/father-daily-magazine/archive/" class="back-nav-link">← 目録（バックナンバー一覧）へ</a>
+        <a href="/father-daily-magazine/" class="back-nav-link">最新号へ戻る ↗</a>
+      </div>
+
+      <header class="masthead">
+        <h1 class="brand-logo">THE TOKYO FLÂNEUR</h1>
+        <p class="brand-kanji">東 京 逍 遥 録</p>
+      </header>
+
+      <section class="walk-dispatch-card">
+        <div class="dispatch-header">
+          <span>❖ 過去号アーカイブ（{post.frontmatter.date} 発行）</span>
+          <span>FLÂNEUR BACK ISSUE</span>
+        </div>
+        <div class="dispatch-grid">
+          <div class="dispatch-item">
+            <span>🗓 日付:</span>
+            <span class="dispatch-val">{post.frontmatter.date}</span>
+          </div>
+          <div class="dispatch-item">
+            <span>🎯 当時の特集区:</span>
+            <span class="target-ward-badge">{post.frontmatter.ward || "東京23区"}</span>
+          </div>
+          <div class="dispatch-item">
+            <span>🌡 気温:</span>
+            <span class="dispatch-val">{post.frontmatter.temp}</span>
+          </div>
+        </div>
+      </section>
+
+      <main class="article-content">
+        <Content />
+      </main>
+
+      <footer class="colophon">
+        <p>© 2026 THE TOKYO FLÂNEUR — BACK NUMBER ARCHIVE.</p>
+      </footer>
+    </article>
+
+    <script is:inline>
+      document.querySelectorAll(".article-content a").forEach((link) => {
+        if (link.hostname && link.hostname !== window.location.hostname) {
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+        }
+      });
+    </script>
+  </body>
+</html>
