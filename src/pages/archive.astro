@@ -1,0 +1,177 @@
+---
+const posts = import.meta.glob("../content/posts/*.md", { eager: true });
+const postList: any[] = Object.values(posts);
+postList.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>バックナンバー目録 | THE TOKYO FLÂNEUR</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Sans+JP:wght@400;500;700;800&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet" />
+
+    <style is:inline>
+      :root {
+        --paper: #fbf9f5;
+        --desk: #eae6df;
+        --ink: #1f2421;
+        --sub-ink: #555b57;
+        --indigo: #1d3557;
+        --vermilion: #b23a22;
+        --border-color: #1f2421;
+        --box-bg: #f4efe6;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background-color: var(--desk);
+        color: var(--ink);
+        font-family: "Shippori Mincho", "Noto Sans JP", serif;
+        line-height: 1.9;
+        padding: 2.5rem 1rem 5rem;
+      }
+
+      .archive-sheet {
+        max-width: 820px;
+        margin: 0 auto;
+        background-color: var(--paper);
+        border: 2px solid var(--border-color);
+        box-shadow: 10px 10px 0px rgba(31, 36, 33, 0.15);
+        padding: clamp(2rem, 5vw, 4rem);
+      }
+
+      .top-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.8rem;
+        margin-bottom: 2rem;
+      }
+      .back-btn {
+        text-decoration: none;
+        color: var(--ink);
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border: 1.5px solid var(--border-color);
+        background: var(--box-bg);
+        padding: 0.3rem 0.8rem;
+        border-radius: 3px;
+        transition: 0.15s;
+      }
+      .back-btn:hover {
+        background: var(--vermilion);
+        color: #fff;
+      }
+
+      .archive-title {
+        font-family: "Cormorant Garamond", "Shippori Mincho", serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.4rem;
+      }
+      .archive-sub {
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--sub-ink);
+        margin-bottom: 2.5rem;
+        letter-spacing: 0.1em;
+      }
+
+      .issue-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .issue-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+        border: 1.5px solid var(--border-color);
+        padding: 1rem 1.4rem;
+        border-radius: 4px;
+        text-decoration: none;
+        color: var(--ink);
+        box-shadow: 3px 3px 0px rgba(0,0,0,0.08);
+        transition: 0.15s;
+      }
+      .issue-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 5px 5px 0px rgba(0,0,0,0.12);
+        border-color: var(--vermilion);
+      }
+
+      .issue-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .issue-date {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--indigo);
+      }
+      .issue-ward {
+        background: var(--box-bg);
+        border: 1px solid var(--border-color);
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 0.15rem 0.6rem;
+        border-radius: 3px;
+      }
+
+      .issue-arrow {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--vermilion);
+      }
+
+      @media (max-width: 600px) {
+        .archive-sheet { padding: 1.8rem 1.2rem; }
+        .issue-card { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .issue-arrow { align-self: flex-end; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="archive-sheet">
+      <div class="top-nav">
+        <a href="/father-daily-magazine/" class="back-btn">← 最新号へ戻る</a>
+        <span style="font-size: 0.8rem; color: var(--sub-ink);">TOTAL: {postList.length} ISSUES</span>
+      </div>
+
+      <h1 class="archive-title">ARCHIVE / 逍遥録目録</h1>
+      <p class="archive-sub">これまでに発行された東京散歩と文化の記録一覧</p>
+
+      <ul class="issue-list">
+        {postList.map((post) => {
+          const slug = post.file.split("/").pop().replace(".md", "");
+          return (
+            <li>
+              <a href={`/father-daily-magazine/posts/${slug}/`} class="issue-card">
+                <div class="issue-left">
+                  <span class="issue-date">❖ {post.frontmatter.date}</span>
+                  <span class="issue-ward">特集：{post.frontmatter.ward || "東京23区"}</span>
+                  <span style="font-size: 0.82rem; color: var(--sub-ink);">{post.frontmatter.temp}</span>
+                </div>
+                <span class="issue-arrow">読む ↗</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </body>
+</html>
