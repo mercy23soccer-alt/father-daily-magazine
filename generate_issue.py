@@ -142,8 +142,8 @@ user_prompt = f"""
 過去号との被りを避け、Markdown形式のみで出力してください。
 """
 
-# 正しい最新のモデル名（gemini-2.5-flash）に変更
-model_name = "gemini-2.5-flash"
+# エラーメッセージの指定通り gemini-3.8-flash に更新
+model_name = "gemini-3.8-flash"
 response = None
 
 print(f"--- モデル {model_name} で執筆開始 ---")
