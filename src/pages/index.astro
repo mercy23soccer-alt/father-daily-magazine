@@ -14,7 +14,7 @@ const latest = postList[0];
     <title>THE TOKYO FLÂNEUR | 東京逍遥録</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Sans+JP:wght@400;500;700;800&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet" />
     
     <style is:inline>
       :root {
@@ -37,7 +37,7 @@ const latest = postList[0];
         font-family: "Shippori Mincho", "Noto Sans JP", serif;
         line-height: 2.15;
         letter-spacing: 0.035em;
-        font-size: 1.05rem; /* 散歩の達人をゆったり読むサイズ */
+        font-size: 1.05rem;
         padding: 2.5rem 1rem 5rem;
         -webkit-font-smoothing: antialiased;
       }
@@ -73,7 +73,7 @@ const latest = postList[0];
 
       .masthead {
         text-align: center;
-        padding: 3.5rem 0 2.5rem;
+        padding: 3.5rem 0 2rem;
         border-bottom: 3px double var(--border-color);
       }
       .journal-sub {
@@ -102,21 +102,59 @@ const latest = postList[0];
         margin-top: 0.6rem;
         color: var(--sub-ink);
       }
-      .issue-details {
-        margin-top: 1.2rem;
-        font-size: 0.82rem;
-        color: var(--sub-ink);
-        display: flex;
-        justify-content: center;
-        gap: 1.5rem;
+
+      /* 【新設】本日の散歩カルテ・グラフィカルカード */
+      .walk-dispatch-card {
+        margin: 1.8rem 0 1.2rem;
+        background: #ffffff;
+        border: 2px solid var(--border-color);
+        box-shadow: 4px 4px 0px rgba(0,0,0,0.08);
+        padding: 1.2rem 1.4rem;
+        border-radius: 4px;
+      }
+      .dispatch-header {
         font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        color: var(--vermilion);
+        border-bottom: 1.5px solid #eee;
+        padding-bottom: 0.4rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        justify-content: space-between;
+      }
+      .dispatch-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.88rem;
+        color: var(--ink);
+      }
+      .dispatch-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .dispatch-val {
+        font-weight: 700;
+      }
+      .target-ward-badge {
+        background: var(--indigo);
+        color: #ffffff;
+        padding: 0.15rem 0.65rem;
+        font-size: 0.95rem;
+        font-weight: 800;
+        border-radius: 3px;
+        letter-spacing: 0.05em;
       }
 
       .editorial-nav {
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem;
-        padding: 1.4rem 0;
+        padding: 1.2rem 0;
         border-bottom: 1px dashed #b5afa4;
       }
       .nav-tag {
@@ -141,7 +179,7 @@ const latest = postList[0];
         background: var(--indigo);
         color: #fff;
         padding: 1rem 1.4rem;
-        margin: 2rem 0 3rem;
+        margin: 1.8rem 0 2.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -198,7 +236,7 @@ const latest = postList[0];
         color: #2b2f2d;
       }
 
-      /* 散歩の達人風：上品な案内カードリンク */
+      /* 案内カードボタン */
       .article-content .guide-link,
       .article-content a {
         display: inline-block;
@@ -260,6 +298,7 @@ const latest = postList[0];
         body { padding: 1.2rem 0.6rem 3rem; font-size: 1rem; }
         .magazine-sheet { padding: 1.8rem 1.2rem; box-shadow: none; }
         .radio-lounge { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+        .dispatch-grid { flex-direction: column; gap: 0.6rem; }
       }
     </style>
   </head>
@@ -279,14 +318,37 @@ const latest = postList[0];
         <p class="journal-sub">A DAILY CHRONICLE OF TOKYO WALK, SUBVERSIVE LAUGH & BOOKS</p>
         <h1 class="brand-logo">THE TOKYO FLÂNEUR</h1>
         <p class="brand-kanji">東 京 逍 遥 録</p>
-        <div class="issue-details">
-          <span>特集: {latest ? latest.frontmatter.ward : "東京23区"}</span>
-          <span>·</span>
-          <span>気温: {latest ? latest.frontmatter.temp : ""}</span>
-          <span>·</span>
-          <span>日没: {latest ? latest.frontmatter.sunset : ""}</span>
-        </div>
       </header>
+
+      <!-- 【新設】絵文字と記号であしらった本日の散歩カルテ -->
+      <section class="walk-dispatch-card">
+        <div class="dispatch-header">
+          <span>❖ 本日の東京逍遥手帖（WEATHER & FIELD）</span>
+          <span>TOKYO FLÂNEUR DISPATCH</span>
+        </div>
+        <div class="dispatch-grid">
+          <div class="dispatch-item">
+            <span>🗓</span>
+            <span class="dispatch-val">{latest ? latest.frontmatter.date : "本日の号"}</span>
+          </div>
+          <div class="dispatch-item">
+            <span>🎯 本日の逍遥区:</span>
+            <span class="target-ward-badge">{latest && latest.frontmatter.ward ? latest.frontmatter.ward : "東京23区"}</span>
+          </div>
+          <div class="dispatch-item">
+            <span>🌡 気温:</span>
+            <span class="dispatch-val">{latest && latest.frontmatter.temp ? latest.frontmatter.temp : "20°C"}</span>
+          </div>
+          <div class="dispatch-item">
+            <span>🌇 日没:</span>
+            <span class="dispatch-val">{latest && latest.frontmatter.sunset ? latest.frontmatter.sunset : "18:00"}</span>
+          </div>
+          <div class="dispatch-item">
+            <span>🏛 拠点:</span>
+            <span class="dispatch-val">豊島区（池袋・目白・巣鴨）</span>
+          </div>
+        </div>
+      </section>
 
       <nav class="editorial-nav">
         <a href="#walk" class="nav-tag">01 23区逍遥</a>
@@ -403,7 +465,7 @@ const latest = postList[0];
 
         const rawText = content.innerText
           .replace(/https?:\/\/\S+/g, "")
-          .replace(/[#*`_■§➔▲★🗺🏛▶📻📊🥧🧭📚👶🏢📈↗]/g, "")
+          .replace(/[#*`_■§➔▲★🗺🏛▶📻📊🥧🧭📚👶🏢📈↗❖🗓🎯🌡🌇]/g, "")
           .trim();
 
         chunks = splitTextIntoChunks(rawText, 90);
