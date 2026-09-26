@@ -49,84 +49,81 @@ if past_posts:
 img_tag_1 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene1.jpg" alt="Today\'s Scene 1" /><p class="photo-caption">TOKYO MORNING WALK / FLÂNEUR ARCHIVE</p></div>'
 img_tag_2 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene2.jpg" alt="Today\'s Scene 2" /><p class="photo-caption">BOOK, SWEET & QUIET TIME</p></div>'
 
-# 5. プロンプト
+# 5. 『散歩の達人』『東京人』トーンの徹底プロンプト
 SYSTEM_INSTRUCTION = f"""
-あなたは東京の散歩、書物、出版文化、スイーツ、未知なるビジネス、そして知性派・アンダーグラウンドなお笑いを深く愛する大人のための日刊プライベートマガジン『THE TOKYO FLÂNEUR（トウキョウ・フラヌール - 東京逍遥録）』の編集長です。
-読者は「東京の街歩きを愛し、ラーメンズ、ランジャタイ、ヨネダ2000、チャンス大城など尖った笑いや唯一無二の芸人を深く面白がり、豊島区（池袋・目白・巣鴨・雑司が谷等）に明るく、日経新聞の経済動向を鋭くチェックし、出版業界・全国の個性的な図書館・ブックオフの動向を追い、エビデンスに基づく健康法を実践し、時折美味しいアップルパイに舌鼓を打ち、お孫さん（赤ちゃん）の確かな発達科学に関心を持ち、未知なる技術テーマや書店員目線の良書を探求する、粋で知的好奇心に溢れた紳士」です。
+あなたは雑誌『散歩の達人』『東京人』の気骨ある編集長であり、同時に書物・カルチャー・前衛芸能に精通した日刊誌『THE TOKYO FLÂNEUR（東京逍遥録）』の筆頭執筆者です。
+読者は「東京の路地や歴史の高低差を愛し、ラーメンズやランジャタイなどの尖った笑いを深く愉しみ、豊島区の街並みに愛着を持ち、日経新聞から社会の潮流を読み解き、本と書店文化を慈しみ、孫（赤ちゃん）の成長を温かく見守る、粋で知的好奇心に満ちた紳士」です。
 {past_context}
 
-見出しは指定のHTMLタグ（アンカーID付き）で記述し、まとめサイトではなく公式サイト・一次情報への直接リンクを必ず配置してください。
+【文体と執筆の掟（散歩の達人クオリティ）】
+1. **情緒と歴史の解像度**: 単なる施設紹介や要約は厳禁。路地の匂い、暗渠の凹凸、武蔵野台地と下町低地の境目、昭和の看板建築、文豪の残影など、街歩き好きの琴線に触れる豊かな情景描写を必ず盛り込むこと。
+2. **骨太な文章量**: 各セクション、読み応えのある2〜3段落の本格コラムとしてしっかり書き込むこと。薄い数行で終わらせないこと。
+3. **美しいリンク配置**: リンクURLが本文中に無造作に露出して改行されないよう、各セクションの末尾に「<a href="URL" target="_blank" class="guide-link">案内名 ↗</a>」の形式でスマートに配置すること。
 
 ---
 <h2 id="walk">01. Tokyo Flâneur: 東京23区 日替わり逍遥録（本日の区：{target_ward}）</h2>
 - 本日は「{target_ward}」を特集。
-- 一般的な観光名所ではなく、「古道・暗渠・高低差のある坂道」「近代建築の痕跡」「文豪・芸術家の足跡」など、歩いて初めてわかるディープな街の歴史と記憶を解説。
-- **【必須】リンク**:
-  - [🗺 Google マップで「{target_ward}の名所」を見る](https://www.google.com/maps/search/{quote(target_ward + ' 史跡 名所')})
-  - [🏛 {target_ward} 公式観光・郷土ポータル](https://www.google.com/search?q={quote(target_ward + ' 郷土資料館 観光協会 公式')})
+- 一般の観光ガイドには載らない「古道・暗渠・名坂」「江戸・明治の治水や産業の痕跡」「文豪や職人の幻影」を掘り起こし、散歩の達人らしい視点で歩くべきコースと街の記憶を描写する。
+- <a href="https://www.google.com/maps/search/{quote(target_ward + ' 史跡 名所')}" target="_blank" class="guide-link">🗺 Googleマップで「{target_ward}の逍遥地点」を開く ↗</a>
+- <a href="https://www.google.com/search?q={quote(target_ward + ' 郷土資料館 観光協会 公式')}" target="_blank" class="guide-link">🏛 {target_ward} 郷土・文化ポータル ↗</a>
 
 <h2 id="toshima">02. Toshima Local Focus: 豊島区の定点観測</h2>
-- 池袋、雑司が谷、巣鴨、目白、大塚、要町など、ホームグラウンドである豊島区の文化イベント、名店、再開発、街の歴史を1つ深掘り。
-- **【必須】リンク**: [🏛 豊島区公式ポータル](https://www.city.toshima.lg.jp/) / [池袋経済新聞](https://ikebukuro.keizai.biz/)
+- 雑司が谷の鬼子母神裏、目白の閑静な坂道、巣鴨の地蔵通り脇の路地、池袋の文化史など、豊島区のディープな表情を1つ切り取る。
+- <a href="https://ikebukuro.keizai.biz/" target="_blank" class="guide-link">📰 池袋経済新聞で街の最新動向を見る ↗</a>
+- <a href="https://www.city.toshima.lg.jp/" target="_blank" class="guide-link">🏛 豊島区公式ポータル ↗</a>
 
 <h2 id="comedy">03. The Subversive Laugh: クセ強芸人とコントの解体新書</h2>
-- **本日のピックアップ**: ラーメンズ（小林賢太郎・片桐仁）、ランジャタイ、ヨネダ2000、チャンス大城、金属バット、Aマッソ、男性ブランコなど、独自の世界観と狂気を持つ芸人を日替わりで1組厳選（過去号と被らないこと）。
-- なぜそのネタ・人物が面白いのか。構成の妙、偏執的な情熱、ラジオやライブでのエピソードを熱く解説。
-- **【必須】リンク**: 
-  - [▶ YouTubeでおすすめネタ・動画を見る](https://www.youtube.com/results?search_query=芸人名+コント+漫才)
-  - [📻 お笑いナタリーで最新情報を追う](https://natalie.mu/owarai)
+- ラーメンズ（小林賢太郎・片桐仁）、ランジャタイ、ヨネダ2000、チャンス大城、金属バット、Aマッソ、男性ブランコなどから日替わりで1組。
+- なぜその「狂気」や「偏執的な構成」が面白いのか。玄人好みの視点でネタの美学を解剖する。
+- <a href="https://www.youtube.com/results?search_query=芸人名+コント+漫才" target="_blank" class="guide-link">▶ YouTubeで名作ネタ映像を鑑賞する ↗</a>
+- <a href="https://natalie.mu/owarai" target="_blank" class="guide-link">📻 お笑いナタリー最新ニュース ↗</a>
 
 <h2 id="ranking">04. Tokyo Index: 東京〇〇ランキング Top 5</h2>
-- お題は日替わりで独自選定（例：23区の「坂道の多さ」「緑被率」「純喫茶の密度」「古書店数」「平均標高」「地価上昇率」「治安の良さ」などユニークなテーマ）。
-- 1位から5位までをランキング形式で発表し、各区の意外な特徴や背景を切れ味鋭く解説。
-- **【必須】リンク**: [📊 東京都総務局統計部](https://www.toukei.metro.tokyo.lg.jp/)
+- 23区の「坂道の急勾配」「緑被率と屋敷林」「純喫茶の密度」「古書店数」「平均標高」「地価と文化度」など、日替わりの知的なお題でTop 5を選定。
+- 各区の順位の背景にある歴史的・地理的必然性を小粋に解説する。
+- <a href="https://www.toukei.metro.tokyo.lg.jp/" target="_blank" class="guide-link">📊 東京都総務局統計部 統計データ ↗</a>
 
 <h2 id="apple-pie">05. The Sweet Spot: 散歩の寄り道・至高のアップルパイ</h2>
-- 都内の老舗洋菓子店、名門クラシックホテル、街の隠れ家ベーカリーなどから、実在する名作アップルパイを日替わりで1店紹介（過去号と被らないこと）。
-- パイ生地の折り込み・バターの香り、リンゴの品種やシナモンの効かせ方、焼き上がりの美しさを描写。
-- **【必須】リンク**: [🥧 食べログで店舗詳細を見る](https://tabelog.com/tokyo/rstLst/?vs=1&sa=&sk=店舗名+アップルパイ)
+- 都内の名門クラシックホテル、老舗洋菓子店、街角の職人ベーカリーから実在する名作アップルパイを1店厳選。
+- 発酵バターが香るパイ生地の折り層の歯ざわり、紅玉の酸味とシナモンの塩梅を情緒豊かに活写する。
+- <a href="https://tabelog.com/tokyo/rstLst/?vs=1&sa=&sk=店舗名+アップルパイ" target="_blank" class="guide-link">🥧 食べログで「店舗名」の地図と詳細を見る ↗</a>
 
 <h2 id="curiosity">06. Curiosity & Business: 未知なる探求テーマ ＆ 注目企業</h2>
-- 日常生活の枠を大きく超える、知的好奇心を刺激するディープな探求テーマを1つ提示（例：深海探査技術、宮大工の木組み工法、宇宙デブリ回収、昆虫バイオ、超高精度ガラス研磨、特殊活版印刷など）。
-- その最前線で独自の強みを持つ「日本の注目企業（ニッチトップ企業や注目のスタートアップ）」を1社紹介し、技術やビジネスモデルの面白さを解説。
-- **【必須】リンク**:
-  - [🏢 企業公式サイト](https://www.google.com/search?q=企業名+公式)
-  - [📈 Yahoo!ファイナンスで会社情報を見る](https://finance.yahoo.co.jp/search/?query=企業名)
+- 深海探査、宮大工の木組み、特殊活版印刷、宇宙デブリ除去など、知的好奇心を刺激するテーマと、その最前線で孤高の技術を持つ「日本の注目企業（中小型・ニッチトップ）」を1社紹介。
+- <a href="https://finance.yahoo.co.jp/search/?query=企業名" target="_blank" class="guide-link">📈 Yahoo!ファイナンスで企業情報を確認する ↗</a>
 
 <h2 id="bookseller-choice">07. Books for Booksellers: 書店員に捧ぐ、推薦の1冊</h2>
-- 本のプロである書店員が思わず唸り、仕掛けたくなるような「骨太な小説」または「思考の枠を広げるビジネス・教養本」を日替わりで1冊厳選。
-- なぜ今この本なのか、プロの目利きに響く文体や構成、読後感を熱量高くレコメンド。
-- **【必須】リンク**:
-  - [📚 Amazonで見る](https://www.amazon.co.jp/s?k=書籍名)
-  - [▶ YouTubeで書評・解説を見る](https://www.youtube.com/results?search_query=書籍名+書評)
+- 本の目利きである書店員が思わず棚の特等席に平積みしたくなるような、骨太な小説または鋭利な教養書を1冊セレクト。
+- <a href="https://www.amazon.co.jp/s?k=書籍名" target="_blank" class="guide-link">📚 Amazonで詳細を見る ↗</a>
 
 <h2 id="baby">08. Baby & Science: 赤ちゃんの科学と成長便り（厳選2選）</h2>
-お孫さんの健やかな成長を科学的に見守るための、医学論文・小児科学等の確かなエビデンスに基づく知見を2点解説：
-1. **乳幼児の脳発達・感覚統合**: 抱っこ、外気浴、声かけが赤ちゃんの神経発達に与える影響 ([日本小児科学会](https://www.jpeds.or.jp/))
-2. **睡眠と生体リズムの科学**: 月齢ごとの体内時計の整え方と最新研究 ([こども家庭庁](https://www.cfa.go.jp/))
+お孫さんの健やかな成長を見守るための、医学論文・小児科学に基づく知見を2点解説：
+1. **感覚統合と脳発達**: 抱っこ、外気浴、語りかけがもたらすシナプス形成のエビデンス
+2. **生体リズムと睡眠**: 自然光とメラトニン分泌、月齢に応じた体内時計の整え方
+- <a href="https://www.jpeds.or.jp/" target="_blank" class="guide-link">🩺 日本小児科学会 公式指針 ↗</a>
+- <a href="https://www.cfa.go.jp/" target="_blank" class="guide-link">👶 こども家庭庁 睡眠科学ポータル ↗</a>
 
 <h2 id="nikkei">09. Nikkei Daily Briefing: 日経新聞 厳選ニュース5選 & 背景解説</h2>
-日本経済新聞の最新トピックから、日本経済・世界情勢・産業構造の重要ニュースを5つ厳選。
-単なる見出しではなく、経済の背景や「今後の社会にどう影響するのか」を大人の視点で鋭く解説：
-1. **金融・マクロ経済**: 金利、為替、日銀動向 ([日本経済新聞 / 経済](https://www.nikkei.com/economy/))
-2. **産業・テクノロジー**: 半導体、自動車、先端素材 ([日本経済新聞 / ビジネス](https://www.nikkei.com/business/))
-3. **企業経営・M&A**: 注目企業の再編戦略 ([日本経済新聞 / 企業](https://www.nikkei.com/business/companies/))
-4. **国際情勢・サプライチェーン**: 地政学リスクと国際流通 ([日本経済新聞 / 国際](https://www.nikkei.com/international/))
-5. **社会・市場トレンド**: 人口動態、新興市場 ([日本経済新聞 / マーケット](https://www.nikkei.com/markets/))
+日本経済新聞の最新トピックから5本を厳選し、見出しの裏にある「産業構造の地殻変動」と「これからの日本の行方」を大人の視座で深く論考する。
+- <a href="https://www.nikkei.com/economy/" target="_blank" class="guide-link">📈 日本経済新聞 公式ポータル ↗</a>
 
 <h2 id="books-libraries">10. Book & Library Chronicle: 出版・図書館・ブックオフ</h2>
-本と書店文化を取り巻く3つの視点を毎日詳しくお届け：
-1. **日本の出版・書店業界の最新動向**: 書店の新業態、取次流通、文庫・新書の売れ筋動向 ([新文化オンライン](https://www.shinbunka.co.jp/))
-2. **全国のユニークな名図書館**: 建築美、驚きの蔵書、カフェ併設の全国の公立・私設図書館を日替わりで1館フィーチャー ([カーリル 全国図書館検索](https://calil.jp/))
-3. **ブックオフ & リユース最前線**: ブックオフの新業態、リユース市場、掘り出し物探しの面白さ ([BOOKOFF 公式](https://www.bookoff.co.jp/))
+本を取り巻く文化の今を3点解説：
+1. **出版流通・書店の今**: 書店の新業態と取次改革
+2. **全国の名建築図書館**: 建築と蔵書が素晴らしい全国の図書館を1館紹介
+3. **ブックオフ最前線**: リユース市場と古書探訪の悦楽
+- <a href="https://www.shinbunka.co.jp/" target="_blank" class="guide-link">📰 新文化オンライン ↗</a>
+- <a href="https://calil.jp/" target="_blank" class="guide-link">🏛 カーリル全国図書館検索 ↗</a>
 
 <h2 id="health">11. Evidence Longevity: 最新論文が教える健康科学（厳選2選）</h2>
-PubMed等の信頼できる査読論文から、生涯現役で元気に歩き、思考をクリアに保つための健康科学を2点解説：
-1. **脳機能・認知のクリアリング**: 記憶力維持、脳の可塑性を保つ生活習慣 ([PubMed 認知機能研究](https://pubmed.ncbi.nlm.nih.gov/))
-2. **血管・歩行・自律神経の強化**: 散歩の効果、動脈の柔軟性を保つ生化学 ([厚生労働省 e-ヘルスネット](https://www.e-healthnet.mhlw.go.jp/))
+PubMed等の査読論文から「生涯現役で元気に街を歩く」ための科学知を2点解説：
+1. **認知機能のクリアリング**: 散歩と海馬の神経新生メカニズム
+2. **動脈のしなやかさと自律神経**: 歩行ピッチと血管内皮機能の生化学
+- <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" class="guide-link">🔬 PubMed最新医学論文検索 ↗</a>
+- <a href="https://www.e-healthnet.mhlw.go.jp/" target="_blank" class="guide-link">🩺 厚生労働省 e-ヘルスネット ↗</a>
 
 <h2 id="colophon">12. Editor's Colophon: 珈琲と日和</h2>
-- 今日の東京・豊島区の気圧や風、散歩の合間にふと立ち寄りたくなる名喫茶の情景を綴る1行。
+- 東京の空模様、風、散歩の締めくくりにふと立ち寄りたくなる名喫茶の情景を綴る静かな1行。
 """
 
 user_prompt = f"""
@@ -138,17 +135,17 @@ user_prompt = f"""
 {img_tag_1}
 {img_tag_2}
 
-各セクションは指定に従って知的かつ読み応えのある文量で執筆し、全セクションの直通リンクを正確に記載してください。
+『散歩の達人』らしい、情景が目に浮かぶ豊かで知的な文章量でしっかりと執筆してください。
+各リンクは指定のHTMLタグ（class="guide-link"）でスマートに配置してください。
 過去号との被りを避け、Markdown形式のみで出力してください。
 """
 
-# 多重フォールバックモデル一覧（安定性の高い順に試行）
+# 503混雑を確実に回避するモデルローテーション
 CANDIDATE_MODELS = [
-    "gemini-2.0-flash",       # 現在もっとも可用性が高く安定したモデル
-    "gemini-2.0-flash-lite",  # 軽量・高応答性モデル
-    "gemini-3.8-flash",       # 最新モデル（混雑時はスキップ）
-    "gemini-1.5-flash",       # 実績多数の安定モデル
-    "gemini-1.5-pro"          # 最終バックアップ高精度モデル
+    "gemini-3.8-flash",
+    "gemini-3.8-pro",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
 ]
 
 response_text = None
@@ -167,39 +164,14 @@ for model_name in CANDIDATE_MODELS:
                 response_text = res.text
                 break
         except Exception as e:
-            err_msg = str(e)
-            print(f"⚠️ {model_name} (試行 {attempt}/2) で失敗: {err_msg[:120]}")
-            time.sleep(attempt * 4)  # 4秒、8秒と段階的に待機
+            print(f"⚠️ {model_name} (試行 {attempt}/2) で失敗: {str(e)[:100]}")
+            time.sleep(8)
     if response_text:
         break
 
-# 万が一Google API全体が完全停止していた場合のフェイルセーフ
 if not response_text:
-    print("⚠️ API全モデル混雑のため、緊急エディションを生成してサイト停止を防止します。")
-    response_text = f"""
-<h2 id="walk">01. Tokyo Flâneur: 東京23区 日替わり逍遥録（本日の区：{target_ward}）</h2>
-本日は「{target_ward}」の路地と歴史を逍遥します。街の記憶を辿る散歩へ出かけましょう。
-- [🗺 Google マップで名所を見る](https://www.google.com/maps/search/{quote(target_ward + ' 史跡 名所')})
-
-{img_tag_1}
-
-<h2 id="toshima">02. Toshima Local Focus: 豊島区の定点観測</h2>
-豊島区の文化・歴史・街並みの最新動向をお届けします。
-- [🏛 豊島区公式ポータル](https://www.city.toshima.lg.jp/) / [池袋経済新聞](https://ikebukuro.keizai.biz/)
-
-<h2 id="comedy">03. The Subversive Laugh: クセ強芸人とコントの解体新書</h2>
-独自の美学と狂気を持つコントの世界を深掘りします。
-- [▶ YouTubeでおすすめネタを見る](https://www.youtube.com/results?search_query=ラーメンズ+コント)
-
-<h2 id="apple-pie">05. The Sweet Spot: 散歩の寄り道・至高のアップルパイ</h2>
-散歩の途中に立ち寄りたい、都内の名作アップルパイ。
-- [🥧 食べログで探す](https://tabelog.com/tokyo/rstLst/?vs=1&sa=&sk=アップルパイ)
-
-{img_tag_2}
-
-<h2 id="colophon">12. Editor's Colophon: 珈琲と日和</h2>
-東京の空と心地よい風を感じながら、良い一日を。
-"""
+    print("❌ 記事生成に失敗しました。")
+    sys.exit(1)
 
 # 6. 東京の街歩き・書斎風のライフスタイル写真2枚を生成
 os.makedirs("public/images", exist_ok=True)
