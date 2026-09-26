@@ -1,0 +1,409 @@
+---
+const posts = import.meta.glob("../content/posts/*.md", { eager: true });
+const postList: any[] = Object.values(posts);
+postList.sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
+
+const latest = postList[0];
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>THE TOKYO FLÂNEUR | 東京逍遥録</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet" />
+    
+    <style is:inline>
+      :root {
+        --paper: #fbf9f5;
+        --desk: #eae6df;
+        --ink: #1f2421;
+        --sub-ink: #555b57;
+        --indigo: #1d3557;
+        --vermilion: #b23a22;
+        --matcha: #3d5a45;
+        --amber: #c47b27;
+        --purple: #6b4c7d;
+        --border-color: #1f2421;
+        --box-bg: #f2eee6;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; background-color: var(--desk); }
+      body {
+        color: var(--ink);
+        font-family: "Shippori Mincho", "Noto Sans JP", serif;
+        line-height: 2.1;
+        letter-spacing: 0.03em;
+        font-size: 1.05rem; /* スマホでも読みやすいゆったり設計 */
+        padding: 2.5rem 1rem 5rem;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .magazine-sheet {
+        max-width: 880px;
+        margin: 0 auto;
+        background-color: var(--paper);
+        border: 2px solid var(--border-color);
+        box-shadow: 10px 10px 0px rgba(31, 36, 33, 0.15);
+        padding: clamp(2rem, 5vw, 4.5rem);
+      }
+
+      .top-folio {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.8rem;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+      }
+      .badge-tokyo {
+        background-color: var(--indigo);
+        color: #fff;
+        padding: 0.2rem 0.6rem;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+
+      .masthead {
+        text-align: center;
+        padding: 3.5rem 0 2.5rem;
+        border-bottom: 3px double var(--border-color);
+      }
+      .journal-sub {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 0.88rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--vermilion);
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+      }
+      .brand-logo {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(2.6rem, 8vw, 5rem);
+        font-weight: 600;
+        font-style: italic;
+        line-height: 0.95;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+      .brand-kanji {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.35em;
+        margin-top: 0.6rem;
+        color: var(--sub-ink);
+      }
+      .issue-details {
+        margin-top: 1.2rem;
+        font-size: 0.82rem;
+        color: var(--sub-ink);
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        font-family: "Noto Sans JP", sans-serif;
+      }
+
+      .editorial-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        padding: 1.4rem 0;
+        border-bottom: 1px dashed #b5afa4;
+      }
+      .nav-tag {
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: var(--ink);
+        background: var(--box-bg);
+        border: 1px solid var(--border-color);
+        padding: 0.25rem 0.55rem;
+        border-radius: 3px;
+        transition: 0.15s;
+      }
+      .nav-tag:hover, .nav-tag.highlight {
+        background: var(--vermilion);
+        color: #fff;
+        border-color: var(--vermilion);
+      }
+
+      .radio-lounge {
+        background: var(--indigo);
+        color: #fff;
+        padding: 1rem 1.4rem;
+        margin: 2rem 0 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 2px solid var(--border-color);
+        box-shadow: 4px 4px 0px rgba(0,0,0,0.15);
+        gap: 1rem;
+      }
+      .radio-btn {
+        background: #f4d06f;
+        color: var(--ink);
+        border: 1px solid #000;
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 0.5rem 1.2rem;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .radio-btn:hover { background: #ffeaa7; }
+      .radio-status {
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.75rem;
+        color: #d1d9e6;
+      }
+
+      .article-content { margin-top: 1.5rem; }
+      .article-content h2 {
+        font-family: "Cormorant Garamond", "Shippori Mincho", serif;
+        font-size: 1.38rem;
+        font-weight: 700;
+        background: var(--box-bg);
+        border-left: 6px solid var(--indigo);
+        border-bottom: 1.5px solid var(--border-color);
+        padding: 0.6rem 1rem;
+        margin: 4.5rem 0 1.6rem;
+        scroll-margin-top: 2rem;
+      }
+
+      #comedy { border-left-color: var(--vermilion) !important; }
+      #apple-pie { border-left-color: var(--amber) !important; }
+      #curiosity { border-left-color: var(--purple) !important; }
+      #baby { border-left-color: var(--matcha) !important; }
+
+      .article-content h3 {
+        font-size: 1.18rem;
+        font-weight: 700;
+        margin: 2.2rem 0 0.8rem;
+        color: var(--ink);
+      }
+      .article-content p {
+        margin-bottom: 1.6rem;
+        text-align: justify;
+        font-size: 1.05rem;
+        color: #2b2f2d;
+      }
+
+      .magazine-photo-box { margin: 3.5rem 0; }
+      .magazine-photo-box img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 2px solid var(--border-color);
+        box-shadow: 6px 6px 0px rgba(0,0,0,0.1);
+      }
+      .photo-caption {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 0.82rem;
+        letter-spacing: 0.15em;
+        color: var(--sub-ink);
+        margin-top: 0.6rem;
+        text-align: right;
+      }
+
+      .article-content a {
+        color: var(--vermilion);
+        text-decoration: none;
+        font-weight: 700;
+        border-bottom: 1.5px solid var(--vermilion);
+        padding-bottom: 1px;
+        transition: 0.12s;
+      }
+      .article-content a:hover {
+        background: #fbeee8;
+      }
+      .article-content ul, .article-content ol { margin: 1.2rem 0 1.8rem 1.4rem; }
+      .article-content li { margin-bottom: 0.8rem; font-size: 1.02rem; }
+
+      .colophon {
+        margin-top: 5rem;
+        border-top: 2px solid var(--border-color);
+        padding-top: 2rem;
+        text-align: center;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.1em;
+        color: var(--sub-ink);
+      }
+
+      @media (max-width: 600px) {
+        body { padding: 1.2rem 0.6rem 3rem; font-size: 1rem; }
+        .magazine-sheet { padding: 1.8rem 1.2rem; box-shadow: none; }
+        .radio-lounge { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <article class="magazine-sheet">
+      <div class="top-folio">
+        <div>
+          <span class="badge-tokyo">TOKYO JOURNAL</span>
+          <span>FLÂNEUR & CHRONICLE</span>
+        </div>
+        <div>
+          <span style="font-family: 'Noto Sans JP', sans-serif; font-size: 0.8rem;">豊島区 · {latest ? latest.frontmatter.date : ""}</span>
+        </div>
+      </div>
+
+      <header class="masthead">
+        <p class="journal-sub">A DAILY CHRONICLE OF TOKYO WALK, SUBVERSIVE LAUGH & BOOKS</p>
+        <h1 class="brand-logo">THE TOKYO FLÂNEUR</h1>
+        <p class="brand-kanji">東 京 逍 遥 録</p>
+        <div class="issue-details">
+          <span>特集: {latest ? latest.frontmatter.ward : "東京23区"}</span>
+          <span>·</span>
+          <span>気温: {latest ? latest.frontmatter.temp : ""}</span>
+          <span>·</span>
+          <span>日没: {latest ? latest.frontmatter.sunset : ""}</span>
+        </div>
+      </header>
+
+      <nav class="editorial-nav">
+        <a href="#walk" class="nav-tag">01 23区逍遥</a>
+        <a href="#toshima" class="nav-tag">02 豊島区定点</a>
+        <a href="#comedy" class="nav-tag highlight">03 クセ強芸人</a>
+        <a href="#ranking" class="nav-tag">04 東京順位</a>
+        <a href="#apple-pie" class="nav-tag">05 アップルパイ</a>
+        <a href="#curiosity" class="nav-tag highlight">🧭 06 探求&企業</a>
+        <a href="#bookseller-choice" class="nav-tag">📚 07 書店員推薦</a>
+        <a href="#baby" class="nav-tag">👶 08 赤ちゃん科学</a>
+        <a href="#nikkei" class="nav-tag">09 日経5選</a>
+        <a href="#books-libraries" class="nav-tag">10 出版・図書館</a>
+        <a href="#health" class="nav-tag">11 論文健康法</a>
+      </nav>
+
+      <div class="radio-lounge">
+        <div>
+          <button id="radio-toggle" class="radio-btn">▶ 音声で聴く（散歩ラジオ）</button>
+        </div>
+        <div id="radio-status" class="radio-status">音声合成エンジン：準備完了</div>
+      </div>
+
+      <main id="article-content" class="article-content">
+        {latest ? (
+          <latest.Content />
+        ) : (
+          <p>朝刊を発行中です。Actionsから実行してください。</p>
+        )}
+      </main>
+
+      <footer class="colophon">
+        <p>© 2026 THE TOKYO FLÂNEUR — PRINTED DIGITALLY FOR PRIVATE LIVING.</p>
+      </footer>
+    </article>
+
+    <script is:inline>
+      document.querySelectorAll("#article-content a").forEach((link) => {
+        if (link.hostname && link.hostname !== window.location.hostname) {
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+        }
+      });
+
+      function splitTextIntoChunks(text, maxLen = 90) {
+        const sentences = text.split(/(?<=[。！？\n])/);
+        const chunks = [];
+        let current = "";
+        for (const s of sentences) {
+          if (!s.trim()) continue;
+          if ((current + s).length > maxLen) {
+            if (current) chunks.push(current.trim());
+            current = s;
+          } else {
+            current += s;
+          }
+        }
+        if (current.trim()) chunks.push(current.trim());
+        return chunks;
+      }
+
+      const btn = document.getElementById("radio-toggle");
+      const status = document.getElementById("radio-status");
+      let isPlaying = false;
+      let chunks = [];
+      let currentIdx = 0;
+
+      function stopRadio() {
+        window.speechSynthesis.cancel();
+        isPlaying = false;
+        btn.innerText = "▶ 音声で聴く（散歩ラジオ）";
+        status.innerText = "朗読停止中";
+      }
+
+      function speakNextChunk() {
+        if (!isPlaying) return;
+        if (currentIdx >= chunks.length) {
+          isPlaying = false;
+          btn.innerText = "▶ 音声で聴く（散歩ラジオ）";
+          status.innerText = "本日の朗読が完了しました";
+          return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(chunks[currentIdx]);
+        utterance.lang = "ja-JP";
+        utterance.rate = 1.0;
+
+        utterance.onend = () => {
+          currentIdx++;
+          speakNextChunk();
+        };
+
+        utterance.onerror = () => {
+          currentIdx++;
+          if (currentIdx < chunks.length) speakNextChunk();
+          else stopRadio();
+        };
+
+        window.speechSynthesis.speak(utterance);
+      }
+
+      btn.addEventListener("click", () => {
+        if (!("speechSynthesis" in window)) {
+          alert("お使いのブラウザは音声読み上げに対応していません。");
+          return;
+        }
+
+        if (isPlaying) {
+          stopRadio();
+          return;
+        }
+
+        const content = document.getElementById("article-content");
+        if (!content) return;
+
+        const rawText = content.innerText
+          .replace(/https?:\/\/\S+/g, "")
+          .replace(/[#*`_■§➔▲★🗺🏛▶📻📊🥧🧭📚👶🏢📈]/g, "")
+          .trim();
+
+        chunks = splitTextIntoChunks(rawText, 90);
+        if (chunks.length === 0) return;
+
+        window.speechSynthesis.cancel();
+        isPlaying = true;
+        currentIdx = 0;
+        btn.innerText = "⏹ 朗読を停止";
+        status.innerText = "本日の記事を朗読中...";
+
+        speakNextChunk();
+      });
+    </script>
+  </body>
+</html>
