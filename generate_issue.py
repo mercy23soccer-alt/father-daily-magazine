@@ -3,6 +3,7 @@ import sys
 import io
 import time
 import glob
+import re
 import requests
 from datetime import datetime
 from urllib.parse import quote
@@ -26,7 +27,7 @@ daily = weather_res.get("daily", {})
 current_temp = str(current.get("temperature_2m", "20"))
 sunset = daily.get("sunset", ["18:00"])[0].split("T")[-1]
 
-# 2. 東京23区の厳格ローテーション選定（毎日異なる区を循環）
+# 2. 東京23区の厳格ローテーション選定
 TOKYO_23_WARDS = [
     "千代田区", "中央区", "港区", "新宿区", "文京区", "台東区", "墨田区", "江東区",
     "品川区", "目黒区", "大田区", "世田谷区", "渋谷区", "中野区", "杉並区", "豊島区",
@@ -49,16 +50,16 @@ if past_posts:
 img_tag_1 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene1.jpg" alt="Today\'s Scene 1" /><p class="photo-caption">TOKYO MORNING WALK / FLÂNEUR ARCHIVE</p></div>'
 img_tag_2 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene2.jpg" alt="Today\'s Scene 2" /><p class="photo-caption">BOOK, SWEET & QUIET TIME</p></div>'
 
-# 5. 『散歩の達人』『東京人』トーンの徹底プロンプト
+# 5. プロンプト
 SYSTEM_INSTRUCTION = f"""
 あなたは雑誌『散歩の達人』『東京人』の気骨ある編集長であり、同時に書物・カルチャー・前衛芸能に精通した日刊誌『THE TOKYO FLÂNEUR（東京逍遥録）』の筆頭執筆者です。
 読者は「東京の路地や歴史の高低差を愛し、ラーメンズやランジャタイなどの尖った笑いを深く愉しみ、豊島区の街並みに愛着を持ち、日経新聞から社会の潮流を読み解き、本と書店文化を慈しみ、孫（赤ちゃん）の成長を温かく見守る、粋で知的好奇心に満ちた紳士」です。
 {past_context}
 
-【文体と執筆の掟（散歩の達人クオリティ）】
-1. **情緒と歴史の解像度**: 単なる施設紹介や要約は厳禁。路地の匂い、暗渠の凹凸、武蔵野台地と下町低地の境目、昭和の看板建築、文豪の残影など、街歩き好きの琴線に触れる豊かな情景描写を必ず盛り込むこと。
-2. **骨太な文章量**: 各セクション、読み応えのある2〜3段落の本格コラムとしてしっかり書き込むこと。薄い数行で終わらせないこと。
-3. **美しいリンク配置**: リンクURLが本文中に無造作に露出して改行されないよう、各セクションの末尾に「<a href="URL" target="_blank" class="guide-link">案内名 ↗</a>」の形式でスマートに配置すること。
+【執筆ルール】
+- 本文の冒頭にタイトルやメタデータ（title:, date: など）は一切書かないでください。いきなり「01. Tokyo Flâneur」の見出しから書き始めてください。
+- 街歩き好きの琴線に触れる豊かな情景描写、路地の匂い、暗渠、坂道、歴史の陰影をしっかりとした文章量で描写してください。
+- リンクは各項目の末尾に「<a href="URL" target="_blank" class="guide-link">案内名 ↗</a>」の形式で配置してください。
 
 ---
 <h2 id="walk">01. Tokyo Flâneur: 東京23区 日替わり逍遥録（本日の区：{target_ward}）</h2>
@@ -136,11 +137,10 @@ user_prompt = f"""
 {img_tag_2}
 
 『散歩の達人』らしい、情景が目に浮かぶ豊かで知的な文章量でしっかりと執筆してください。
-各リンクは指定のHTMLタグ（class="guide-link"）でスマートに配置してください。
+本文の先頭に「title:」や「date:」などのプログラム的な文字列は絶対に含めないでください。
 過去号との被りを避け、Markdown形式のみで出力してください。
 """
 
-# 503混雑を確実に回避するモデルローテーション
 CANDIDATE_MODELS = [
     "gemini-3.8-flash",
     "gemini-3.8-pro",
@@ -165,13 +165,16 @@ for model_name in CANDIDATE_MODELS:
                 break
         except Exception as e:
             print(f"⚠️ {model_name} (試行 {attempt}/2) で失敗: {str(e)[:100]}")
-            time.sleep(8)
+            time.sleep(6)
     if response_text:
         break
 
 if not response_text:
     print("❌ 記事生成に失敗しました。")
     sys.exit(1)
+
+# 万が一Geminiが先頭に出力したメタデータ文字列があれば除去
+clean_text = re.sub(r'^(title:.*?\n|date:.*?\n|temp:.*?\n|sunset:.*?\n|ward:.*?\n|location:.*?\n)+', '', response_text.strip(), flags=re.MULTILINE).strip()
 
 # 6. 東京の街歩き・書斎風のライフスタイル写真2枚を生成
 os.makedirs("public/images", exist_ok=True)
@@ -212,9 +215,9 @@ def generate_and_save_photo(prompt_text, file_path):
 for p_text, s_path in scenes:
     generate_and_save_photo(p_text, s_path)
 
-# 7. 保存
+# 7. 保存（フロントマターを先頭に厳密配置）
 os.makedirs("src/content/posts", exist_ok=True)
-frontmatter = f"""---
+frontmatter_block = f"""---
 title: "Issue - {today}"
 date: "{today}"
 temp: "{current_temp}°C"
@@ -227,6 +230,6 @@ location: "Tokyo / Toshima"
 
 file_path = f"src/content/posts/{today}.md"
 with open(file_path, "w", encoding="utf-8") as f:
-    f.write(frontmatter + response_text)
+    f.write(frontmatter_block + clean_text)
 
 print(f"Successfully published issue: {file_path}")
