@@ -4,13 +4,14 @@ import io
 import time
 import glob
 import re
+import random
 import requests
 from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
 from PIL import Image
 from google import genai
 
-# 日本時間（JST = UTC+9）を明示的に取得
+# 日本時間（JST）の厳格取得
 JST = timezone(timedelta(hours=9))
 now_jst = datetime.now(JST)
 today = now_jst.strftime("%Y-%m-%d")
@@ -23,7 +24,7 @@ if api_key:
     except Exception as e:
         print(f"Gemini初期化スキップ: {e}")
 
-# 1. 東京・豊島区の天気を取得
+# 1. 天気の取得
 weather_res = requests.get(
     "https://api.open-meteo.com/v1/forecast?latitude=35.73&longitude=139.71&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m&daily=sunset&timezone=Asia%2FTokyo"
 ).json()
@@ -32,7 +33,6 @@ daily = weather_res.get("daily", {})
 current_temp = str(current.get("temperature_2m", "20"))
 sunset = daily.get("sunset", ["18:00"])[0].split("T")[-1]
 
-# 2. 東京23区の厳格ローテーション選定（JST基準）
 TOKYO_23_WARDS = [
     "千代田区", "中央区", "港区", "新宿区", "文京区", "台東区", "墨田区", "江東区",
     "品川区", "目黒区", "大田区", "世田谷区", "渋谷区", "中野区", "杉並区", "豊島区",
@@ -41,7 +41,6 @@ TOKYO_23_WARDS = [
 day_index = now_jst.toordinal() % len(TOKYO_23_WARDS)
 target_ward = TOKYO_23_WARDS[day_index]
 
-# 3. 過去号の被り防止チェック
 past_posts = sorted(glob.glob("src/content/posts/*.md"), reverse=True)
 past_context = ""
 if past_posts:
@@ -49,12 +48,11 @@ if past_posts:
         with open(past_posts[0], "r", encoding="utf-8") as f:
             past_context = f"\n【重要：前回号のトピック（これらと重複禁止）】\n{f.read()[:2000]}\n"
     except Exception as e:
-        print(f"過去記事読み込みスキップ: {e}")
+        print(f"過去記事スキップ: {e}")
 
 img_tag_1 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene1.jpg" alt="Today\'s Scene 1" /><p class="photo-caption">TOKYO MORNING WALK / FLÂNEUR ARCHIVE</p></div>'
 img_tag_2 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene2.jpg" alt="Today\'s Scene 2" /><p class="photo-caption">BOOK, SWEET & QUIET TIME</p></div>'
 
-# 4. プロンプト
 SYSTEM_INSTRUCTION = f"""
 あなたは雑誌『散歩の達人』『東京人』の気骨ある編集長であり、日刊誌『THE TOKYO FLÂNEUR（東京逍遥録）』の筆頭執筆者です。
 読者は「東京の路地や歴史の高低差を愛し、ラーメンズやランジャタイなどの尖った笑いを深く愉しみ、豊島区の街並みに愛着を持ち、日経新聞から社会の潮流を読み解き、本と書店文化を慈しみ、孫（赤ちゃん）の成長を温かく見守る、粋で知的好奇心に満ちた紳士」です。
@@ -126,10 +124,53 @@ if not response_text or len(response_text) < 500:
 
 clean_text = re.sub(r'^(title:.*?\n|date:.*?\n|temp:.*?\n|sunset:.*?\n|ward:.*?\n|location:.*?\n)+', '', response_text.strip(), flags=re.MULTILINE | re.IGNORECASE).strip()
 
-# 5. 写真生成
+# 4. 【新設計】特集区・散歩道に連動した日替わり動的プロンプト
 os.makedirs("public/images", exist_ok=True)
-prompt_1 = "Authentic candid 35mm film photograph of a historic quiet brick street and quaint bookstore in Tokyo under pleasant morning sunlight, nostalgic documentary street photography, retro Tokyo aesthetic"
-prompt_2 = "Cozy atmospheric 35mm film photograph of a classic Tokyo kissaten coffee shop counter with ceramic dripper, freshly baked warm apple pie on a vintage plate, soft ambient morning light"
+
+tokyo_walk_scenes = [
+    f"A quiet historic narrow residential alley in {target_ward} Tokyo with lush potted plants and stone pavement, morning sunlight, 35mm documentary photography",
+    f"Atmospheric retro wooden bookstore entrance in {target_ward} Tokyo with old books displayed outside, nostalgic Tokyo street scene, Leica film photography",
+    f"An old stone staircase slope overlooking traditional tiled rooftops in {target_ward} Tokyo at golden hour, cinematic street photography",
+    f"A quiet tram crossing and retro shopping street in Tokyo under Autumn morning sky, candid Japanese urban landscape"
+]
+
+kissaten_scenes = [
+    "A vintage kissaten coffee counter with polished dark wood, antique brass siphon drippers, and a freshly baked warm apple pie on ceramic plate, warm lighting",
+    "A cozy table inside a historic Tokyo kissaten with stained glass window, porcelain cup of black coffee beside an open classic book, soft morning light",
+    "Close-up of golden flaky handmade apple pie with vanilla bean cream on antique porcelain dish, warm cozy cafe atmosphere",
+    "An aged wooden bookshelf stacked with leather-bound literature novels inside a quiet Tokyo second-hand bookstore, warm ambient lamp light"
+]
+
+day_seed = now_jst.timetuple().tm_yday
+prompt_1 = tokyo_walk_scenes[day_seed % len(tokyo_walk_scenes)]
+prompt_2 = kissaten_scenes[(day_seed + 1) % len(kissaten_scenes)]
+
+if client:
+    try:
+        photo_gen_prompt = f"""
+以下の記事本文（特集区：{target_ward}）を読み、雑誌『散歩の達人』『東京人』に掲載されるような、情緒ある35mmフィルム写真の英語プロンプトを2つ考案してください。
+1つ目は{target_ward}の情緒ある街歩き・路地・坂道・近代建築、2つ目は純喫茶・アップルパイ・古本屋の静謐なシーンにしてください。
+出力形式：
+PROMPT1: <英語プロンプト>
+PROMPT2: <英語プロンプト>
+
+記事抜粋：
+{clean_text[:1000]}
+"""
+        p_res = client.models.generate_content(
+            model="gemini-3.8-flash",
+            contents=photo_gen_prompt,
+        )
+        if p_res and p_res.text:
+            m1 = re.search(r'PROMPT1:\s*(.+)', p_res.text)
+            m2 = re.search(r'PROMPT2:\s*(.+)', p_res.text)
+            if m1:
+                prompt_1 = m1.group(1).strip() + ", authentic 35mm film photography, nostalgic Tokyo aesthetic"
+            if m2:
+                prompt_2 = m2.group(1).strip() + ", authentic 35mm film photography, warm vintage kissaten atmosphere"
+            print("✅ 散歩連動型オリジナル画像プロンプトの生成に成功！")
+    except Exception as e:
+        print(f"動的プロンプト生成スキップ（日替わりプールを使用）: {e}")
 
 scenes = [
     (prompt_1, f"public/images/{today}_scene1.jpg"),
@@ -153,7 +194,7 @@ def generate_and_save_photo(prompt_text, file_path):
 
     try:
         clean_prompt = quote(prompt_text)
-        url = f"https://image.pollinations.ai/prompt/{clean_prompt}?width=1200&height=675&nologo=true&seed={int(time.time())}"
+        url = f"https://image.pollinations.ai/prompt/{clean_prompt}?width=1200&height=675&nologo=true&seed={int(time.time()) + random.randint(1, 99999)}"
         r = requests.get(url, timeout=30)
         if r.status_code == 200:
             with open(file_path, "wb") as f:
@@ -164,7 +205,7 @@ def generate_and_save_photo(prompt_text, file_path):
 for p_text, s_path in scenes:
     generate_and_save_photo(p_text, s_path)
 
-# 6. 保存
+# 5. 保存
 os.makedirs("src/content/posts", exist_ok=True)
 frontmatter_block = f"""---
 title: "Issue - {today}"
