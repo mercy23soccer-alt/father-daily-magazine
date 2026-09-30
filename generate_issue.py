@@ -41,25 +41,59 @@ TOKYO_23_WARDS = [
 day_index = now_jst.toordinal() % len(TOKYO_23_WARDS)
 target_ward = TOKYO_23_WARDS[day_index]
 
-past_posts = sorted(glob.glob("src/content/posts/*.md"), reverse=True)
-past_context = ""
-if past_posts:
+# 2. 【過去90日分】全記事から重複禁止トピックを自動抽出
+past_posts = sorted(glob.glob("src/content/posts/*.md"), reverse=True)[:90]
+past_used_topics = []
+
+for p in past_posts:
     try:
-        with open(past_posts[0], "r", encoding="utf-8") as f:
-            past_context = f"\n【重要：前回号のトピック（これらと重複禁止）】\n{f.read()[:2000]}\n"
+        with open(p, "r", encoding="utf-8") as f:
+            c = f.read()
+            date_label = os.path.basename(p).replace(".md", "")
+            items = []
+            for line in c.splitlines():
+                line_str = line.strip()
+                if line_str.startswith("#") or line_str.startswith("<h2") or line_str.startswith("<h3"):
+                    clean_h = re.sub(r'<[^>]+>|[#*]', '', line_str).strip()
+                    if clean_h and not any(k in clean_h for k in [
+                        "Tokyo Flâneur", "Toshima Local Focus", "The Subversive Laugh",
+                        "Tokyo Index", "The Sweet Spot", "Curiosity & Business",
+                        "Books for Booksellers", "Baby & Science", "Nikkei Daily",
+                        "Book & Library", "Evidence Longevity", "Editor's Colophon"
+                    ]):
+                        items.append(clean_h)
+                elif any(k in line_str for k in ["ネタ", "芸人", "店", "パイ", "本", "企業", "坂", "ランキング"]):
+                    bolds = re.findall(r'\*\*(.*?)\*\*', line_str)
+                    if bolds:
+                        items.extend(bolds[:2])
+                    else:
+                        clean_l = re.sub(r'<[^>]+>|\[.*?\]\(.*?\)|\*', '', line_str).strip()
+                        if 3 < len(clean_l) < 45:
+                            items.append(clean_l)
+
+            seen = set()
+            unique_items = [x for x in items if not (x in seen or seen.add(x))]
+            if unique_items:
+                past_used_topics.append(f"【{date_label}号】: " + " / ".join(unique_items[:8]))
     except Exception as e:
-        print(f"過去記事スキップ: {e}")
+        pass
+
+past_context = "\n".join(past_used_topics) if past_used_topics else "（過去90日間の記録なし）"
 
 img_tag_1 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene1.jpg" alt="Today\'s Scene 1" /><p class="photo-caption">TOKYO MORNING WALK / FLÂNEUR ARCHIVE</p></div>'
 img_tag_2 = f'<div class="magazine-photo-box"><img src="/father-daily-magazine/images/{today}_scene2.jpg" alt="Today\'s Scene 2" /><p class="photo-caption">BOOK, SWEET & QUIET TIME</p></div>'
 
 SYSTEM_INSTRUCTION = f"""
 あなたは雑誌『散歩の達人』『東京人』の気骨ある編集長であり、日刊誌『THE TOKYO FLÂNEUR（東京逍遥録）』の筆頭執筆者です。
-読者は「東京の路地や歴史の高低差を愛し、ラーメンズやランジャタイなどの尖った笑いを深く愉しみ、豊島区の街並みに愛着を持ち、日経新聞から社会の潮流を読み解き、本と書店文化を慈しみ、孫（赤ちゃん）の成長を温かく見守る、粋で知的好奇心に満ちた紳士」です。
+読者は「東京の路地や歴史の高低差を愛し、演芸・コント・漫才の真髄を愉しみ、豊島区の街並みに愛着を持ち、日経新聞から社会の潮流を読み解き、本と書店文化を慈しみ、孫（赤ちゃん）の成長を温かく見守る、粋で知的好奇心に満ちた紳士」です。
+
+【最重要：過去90日間に取り上げたトピック・固有名詞一覧】
+以下の過去90日間に登場した「芸人、ネタ、喫茶店、アップルパイ店、推薦本、注目企業、ランキングテーマ」は絶対に重複・再使用しないでください：
 {past_context}
 
 【執筆ルール】
 - 本文の冒頭にタイトルやメタデータ（title:, date: など）は一切書かないでください。いきなり「01. Tokyo Flâneur」の見出しから書き始めてください。
+- **お笑いリサーチの広域化**: 特定の芸人に偏らず、浅草・新宿末廣亭の寄席演芸・落語から、昭和・平成・令和のコント・漫才の怪作、学生演芸、若手実力派まで幅広くリサーチし、過去90日間で一度も紹介されていないネタを紹介してください。
 - 街歩き好きの琴線に触れる豊かな情景描写、路地の匂い、暗渠、坂道、歴史の陰影をしっかりとした文章量で描写してください。
 - リンクは各項目の末尾に「<a href="URL" target="_blank" class="guide-link">案内名 ↗</a>」の形式で配置してください。
 
@@ -67,10 +101,10 @@ SYSTEM_INSTRUCTION = f"""
 <h2 id="walk">01. Tokyo Flâneur: 東京23区 日替わり逍遥録（本日の区：{target_ward}）</h2>
 <h2 id="toshima">02. Toshima Local Focus: 豊島区の定点観測</h2>
 <h2 id="comedy">03. The Subversive Laugh: クセ強芸人とコントの解体新書</h2>
-<h2 id="ranking">04. Tokyo Index: 東京〇〇ランキング Top 5</h2>
-<h2 id="apple-pie">05. The Sweet Spot: 散歩の寄り道・至高のアップルパイ</h2>
-<h2 id="curiosity">06. Curiosity & Business: 未知なる探求テーマ ＆ 注目企業</h2>
-<h2 id="bookseller-choice">07. Books for Booksellers: 書店員に捧ぐ、推薦の1冊</h2>
+<h2 id="ranking">04. Tokyo Index: 東京〇〇ランキング Top 5（過去90日間と被らないテーマ）</h2>
+<h2 id="apple-pie">05. The Sweet Spot: 散歩の寄り道・至高のアップルパイ（過去90日間と被らない名店）</h2>
+<h2 id="curiosity">06. Curiosity & Business: 未知なる探求テーマ ＆ 注目企業（過去90日間と被らない銘柄）</h2>
+<h2 id="bookseller-choice">07. Books for Booksellers: 書店員に捧ぐ、推薦の1冊（過去90日間と被らない名著）</h2>
 <h2 id="baby">08. Baby & Science: 赤ちゃんの科学と成長便り（厳選2選）</h2>
 <h2 id="nikkei">09. Nikkei Daily Briefing: 日経新聞 厳選ニュース5選 & 背景解説</h2>
 <h2 id="books-libraries">10. Book & Library Chronicle: 出版・図書館・ブックオフ</h2>
@@ -83,7 +117,7 @@ user_prompt = f"""
 本文の適切な場所に以下の2枚の写真タグを配置してください：
 {img_tag_1}
 {img_tag_2}
-『散歩の達人』らしい豊かな文章量で執筆してください。Markdown形式のみで出力してください。
+過去90日間の内容と一切重複がないことを確認の上、Markdown形式で出力してください。
 """
 
 response_text = None
@@ -94,7 +128,7 @@ if client:
         res = client.models.generate_content(
             model="gemini-3.8-flash",
             contents=user_prompt,
-            config=dict(system_instruction=SYSTEM_INSTRUCTION, temperature=0.7),
+            config=dict(system_instruction=SYSTEM_INSTRUCTION, temperature=0.75),
         )
         if res and res.text and len(res.text) > 800:
             print("✅ 成功: Gemini APIで記事が完成しました！")
@@ -124,26 +158,10 @@ if not response_text or len(response_text) < 500:
 
 clean_text = re.sub(r'^(title:.*?\n|date:.*?\n|temp:.*?\n|sunset:.*?\n|ward:.*?\n|location:.*?\n)+', '', response_text.strip(), flags=re.MULTILINE | re.IGNORECASE).strip()
 
-# 4. 【新設計】特集区・散歩道に連動した日替わり動的プロンプト
+# 4. 特集区に連動した写真生成
 os.makedirs("public/images", exist_ok=True)
-
-tokyo_walk_scenes = [
-    f"A quiet historic narrow residential alley in {target_ward} Tokyo with lush potted plants and stone pavement, morning sunlight, 35mm documentary photography",
-    f"Atmospheric retro wooden bookstore entrance in {target_ward} Tokyo with old books displayed outside, nostalgic Tokyo street scene, Leica film photography",
-    f"An old stone staircase slope overlooking traditional tiled rooftops in {target_ward} Tokyo at golden hour, cinematic street photography",
-    f"A quiet tram crossing and retro shopping street in Tokyo under Autumn morning sky, candid Japanese urban landscape"
-]
-
-kissaten_scenes = [
-    "A vintage kissaten coffee counter with polished dark wood, antique brass siphon drippers, and a freshly baked warm apple pie on ceramic plate, warm lighting",
-    "A cozy table inside a historic Tokyo kissaten with stained glass window, porcelain cup of black coffee beside an open classic book, soft morning light",
-    "Close-up of golden flaky handmade apple pie with vanilla bean cream on antique porcelain dish, warm cozy cafe atmosphere",
-    "An aged wooden bookshelf stacked with leather-bound literature novels inside a quiet Tokyo second-hand bookstore, warm ambient lamp light"
-]
-
-day_seed = now_jst.timetuple().tm_yday
-prompt_1 = tokyo_walk_scenes[day_seed % len(tokyo_walk_scenes)]
-prompt_2 = kissaten_scenes[(day_seed + 1) % len(kissaten_scenes)]
+prompt_1 = f"A quiet historic narrow residential alley in {target_ward} Tokyo with lush potted plants and stone pavement, morning sunlight, 35mm documentary photography"
+prompt_2 = "A vintage kissaten coffee counter with polished dark wood, antique brass siphon drippers, and a freshly baked warm apple pie on ceramic plate, warm lighting"
 
 if client:
     try:
@@ -170,7 +188,7 @@ PROMPT2: <英語プロンプト>
                 prompt_2 = m2.group(1).strip() + ", authentic 35mm film photography, warm vintage kissaten atmosphere"
             print("✅ 散歩連動型オリジナル画像プロンプトの生成に成功！")
     except Exception as e:
-        print(f"動的プロンプト生成スキップ（日替わりプールを使用）: {e}")
+        print(f"動的プロンプト生成スキップ: {e}")
 
 scenes = [
     (prompt_1, f"public/images/{today}_scene1.jpg"),
