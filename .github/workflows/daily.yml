@@ -1,9 +1,8 @@
-name: Publish Father Daily Magazine
+name: Publish Daily Magazine
 
 on:
   schedule:
-    # 日本時間 毎朝 06:00（UTC 21:00）に毎日自動実行
-    - cron: '0 21 * * *'
+    - cron: '27 21 * * *'
   workflow_dispatch:
 
 permissions:
@@ -21,6 +20,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python tools
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install google-genai requests pillow
