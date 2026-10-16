@@ -106,8 +106,8 @@ TOKYO_23_WARDS = [
 day_index = now_jst.toordinal() % len(TOKYO_23_WARDS)
 target_ward = TOKYO_23_WARDS[day_index]
 
-# 2. 【過去90日分】全記事から重複禁止トピックを自動抽出
-past_posts = sorted(glob.glob("src/content/posts/*.md"), reverse=True)[:90]
+# 2. 【過去45日分】全記事から重複禁止トピックを自動抽出（入力トークン最適化）
+past_posts = sorted(glob.glob("src/content/posts/*.md"), reverse=True)[:45]
 past_used_topics = []
 
 for p in past_posts:
@@ -169,7 +169,7 @@ for p in past_posts:
             unique_items = [x for x in items if not (x in seen or seen.add(x))]
             if unique_items:
                 past_used_topics.append(
-                    f"【{date_label}号】: " + " / ".join(unique_items[:8])
+                    f"【{date_label}号】: " + " / ".join(unique_items[:6])
                 )
     except Exception:
         pass
@@ -215,13 +215,16 @@ user_prompt = f"""
 本文の適切な場所に以下の2枚の写真タグを配置してください：
 {img_tag_1}
 {img_tag_2}
-過去90日間の内容と一切重複がないことを確認の上、Markdown形式で出力してください。
+過去記事の内容と一切重複がないことを確認の上、Markdown形式で出力してください。
+また、12セクションすべてを出力した一番最後に、本日の記事内容（特集区：{target_ward}）に合った雑誌『散歩の達人』『東京人』風35mmフィルム写真用の英語プロンプト（1文）を以下の2行の形式で添えてください（1つ目は{target_ward}の街歩き・路地・坂道、2つ目は純喫茶・アップルパイ・古本屋の静謐なシーン）：
+PROMPT1: <英語プロンプト1>
+PROMPT2: <英語プロンプト2>
 """
 
 response_text = None
 
 
-def generate_text_with_gemini(prompt_str, sys_inst=None, thinking_level="medium"):
+def generate_text_with_gemini(prompt_str, sys_inst=None, thinking_level="low"):
     """Gemini Interactions API (gemini-3.8-flash / gemini-4-argon) でテキストを生成する"""
     if not client:
         return None
@@ -259,9 +262,9 @@ def generate_text_with_gemini(prompt_str, sys_inst=None, thinking_level="medium"
 
 
 if client:
-    print("--- Gemini API (gemini-3.8-flash) で執筆中 ---")
+    print("--- Gemini API (gemini-3.8-flash 省エネ・1回統合モード) で執筆中 ---")
     text_out = generate_text_with_gemini(
-        user_prompt, sys_inst=SYSTEM_INSTRUCTION, thinking_level="medium"
+        user_prompt, sys_inst=SYSTEM_INSTRUCTION, thinking_level="low"
     )
     if text_out and len(text_out) > 800:
         print("✅ 成功: Gemini APIで記事が完成しました！")
@@ -287,10 +290,30 @@ if not response_text or len(response_text) < 500:
     print("❌ 記事生成に失敗しました。")
     sys.exit(1)
 
+# 記事末尾から PROMPT1 / PROMPT2 を抽出し、本文からは除去する（API呼び出し1回化）
+prompt_1 = f"A quiet historic narrow residential alley in {target_ward} Tokyo with lush potted plants and stone pavement, morning sunlight, 35mm documentary photography"
+prompt_2 = "A vintage kissaten coffee counter with polished dark wood, antique brass siphon drippers, and a freshly baked warm apple pie on ceramic plate, warm lighting"
+
+m1 = re.search(r"^PROMPT1:\s*(.+)$", response_text, flags=re.MULTILINE)
+m2 = re.search(r"^PROMPT2:\s*(.+)$", response_text, flags=re.MULTILINE)
+if m1:
+    prompt_1 = (
+        m1.group(1).strip()
+        + ", authentic 35mm film photography, nostalgic Tokyo aesthetic"
+    )
+if m2:
+    prompt_2 = (
+        m2.group(1).strip()
+        + ", authentic 35mm film photography, warm vintage kissaten atmosphere"
+    )
+
+clean_text = re.sub(
+    r"^PROMPT[12]:.*?\n?", "", response_text, flags=re.MULTILINE
+).strip()
 clean_text = re.sub(
     r"^(title:.*?\n|date:.*?\n|temp:.*?\n|sunset:.*?\n|ward:.*?\n|location:.*?\n)+",
     "",
-    response_text.strip(),
+    clean_text,
     flags=re.MULTILINE | re.IGNORECASE,
 ).strip()
 
@@ -311,40 +334,6 @@ clean_text = re.sub(
 
 # 4. 画像の生成完了確認（無料 Pollinations.ai Flux エンジンで2枚生成）
 os.makedirs("public/images", exist_ok=True)
-prompt_1 = f"A quiet historic narrow residential alley in {target_ward} Tokyo with lush potted plants and stone pavement, morning sunlight, 35mm documentary photography"
-prompt_2 = "A vintage kissaten coffee counter with polished dark wood, antique brass siphon drippers, and a freshly baked warm apple pie on ceramic plate, warm lighting"
-
-if client:
-    try:
-        photo_gen_prompt = f"""
-以下の記事本文（特集区：{target_ward}）を読み、雑誌『散歩の達人』『東京人』に掲載されるような、情緒ある35mmフィルム写真の英語プロンプトを2つ考案してください。
-1つ目は{target_ward}の情緒ある街歩き・路地・坂道・近代建築、2つ目は純喫茶・アップルパイ・古本屋の静謐なシーンにしてください。
-出力形式：
-PROMPT1: <英語プロンプト>
-PROMPT2: <英語プロンプト>
-
-記事抜粋：
-{clean_text[:1000]}
-"""
-        p_text_out = generate_text_with_gemini(
-            photo_gen_prompt, sys_inst=None, thinking_level="low"
-        )
-        if p_text_out:
-            m1 = re.search(r"PROMPT1:\s*(.+)", p_text_out)
-            m2 = re.search(r"PROMPT2:\s*(.+)", p_text_out)
-            if m1:
-                prompt_1 = (
-                    m1.group(1).strip()
-                    + ", authentic 35mm film photography, nostalgic Tokyo aesthetic"
-                )
-            if m2:
-                prompt_2 = (
-                    m2.group(1).strip()
-                    + ", authentic 35mm film photography, warm vintage kissaten atmosphere"
-                )
-            print("✅ 散歩連動型オリジナル画像プロンプトの生成に成功！")
-    except Exception as e:
-        print(f"動的プロンプト生成スキップ: {e}")
 
 scenes = [
     (prompt_1, f"public/images/{today}_scene1.jpg"),
