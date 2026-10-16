@@ -79,3 +79,173 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Send Email Digest
+        if: always() && steps.deployment.outcome == 'success'
+        continue-on-error: true
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+        run: |
+          python - << 'EOF'
+          import os, glob, re, smtplib
+          from email.message import EmailMessage
+
+          gmail_user = os.environ.get("GMAIL_USER", "").strip()
+          gmail_pass = os.environ.get("GMAIL_APP_PASSWORD", "").strip().replace(" ", "")
+          to_raw = os.environ.get("NOTIFY_EMAIL", "").strip() or gmail_user
+
+          if not gmail_user or not gmail_pass:
+              print("ℹ️ GMAIL_USER または GMAIL_APP_PASSWORD が未設定のためメール送信をスキップしました。")
+              raise SystemExit(0)
+
+          posts = sorted(glob.glob("src/content/posts/*.md"))
+          if not posts:
+              raise SystemExit(0)
+
+          latest_file = posts[-1]
+          issue_date = os.path.basename(latest_file).replace(".md", "")
+          with open(latest_file, "r", encoding="utf-8") as f:
+              content = f.read()
+
+          temp_m = re.search(r'^temp:\s*"?([^"\n]+)"?', content, re.M)
+          sunset_m = re.search(r'^sunset:\s*"?([^"\n]+)"?', content, re.M)
+          ward_m = re.search(r'^ward:\s*"?([^"\n]+)"?', content, re.M)
+          temp_val = temp_m.group(1) if temp_m else "-"
+          sunset_val = sunset_m.group(1) if sunset_m else "-"
+          ward_val = ward_m.group(1) if ward_m else "東京"
+
+          sections = re.split(r'<h2[^>]*>(.*?)</h2>', content)
+          digest_items = []
+          for i in range(1, len(sections), 2):
+              h_title = re.sub(r'<[^>]+>', '', sections[i]).strip()
+              sec_body = sections[i + 1] if i + 1 < len(sections) else ""
+              bolds = [b.strip() for b in re.findall(r'\*\*(.*?)\*\*', sec_body) if 2 < len(b.strip()) < 65]
+              sub_preview = " / ".join(bolds[:2]) if bolds else ""
+              if sub_preview:
+                  digest_items.append(f'<li style="margin-bottom:10px;"><strong>{h_title}</strong><br><span style="color:#555;font-size:13px;">▸ {sub_preview}</span></li>')
+              else:
+                  digest_items.append(f'<li style="margin-bottom:8px;"><strong>{h_title}</strong></li>')
+
+          digest_html = "\n".join(digest_items)
+          site_url = "https://mercy23soccer-alt.github.io/father-daily-magazine/"
+
+          html_body = f"""
+          <div style="font-family:'Hiragino Mincho ProN','Yu Mincho',serif;max-width:600px;margin:0 auto;background:#fbf9f5;border:2px solid #1f2421;padding:28px;color:#1f2421;">
+            <div style="font-size:11px;letter-spacing:0.15em;color:#555b57;border-bottom:1px solid #1f2421;padding-bottom:8px;margin-bottom:16px;">
+              THE TOKYO FLÂNEUR · 東京逍遥録 / {issue_date}
+            </div>
+            <h1 style="font-size:26px;margin:0 0 6px 0;letter-spacing:0.06em;color:#1d3557;">東 京 逍 遥 録</h1>
+            <p style="font-size:13px;color:#3d5a45;margin:0 0 18px 0;">
+              🎯 本日の逍遥区: <strong>{ward_val}</strong> &nbsp;|&nbsp; 🌡 気温: {temp_val} &nbsp;|&nbsp; 🌇 日没: {sunset_val}
+            </p>
+            <div style="text-align:center;margin:24px 0;">
+              <a href="{site_url}" style="display:inline-block;background:#1d3557;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:4px;font-weight:bold;font-size:15px;">
+                📚 本日の東京逍遥録をWebで開く ↗
+              </a>
+            </div>
+            <h3 style="font-size:14px;border-bottom:1px solid #ccc;padding-bottom:6px;margin-top:24px;color:#1d3557;">本日の目次（全{len(digest_items)}コーナー）</h3>
+            <ul style="padding-left:18px;line-height:1.7;font-size:14px;">
+              {digest_html}
+            </ul>
+            <div style="margin-top:28px;padding-top:14px;border-top:1px solid #ccc;font-size:12px;color:#555b57;text-align:center;">
+              <a href="{site_url}" style="color:#1d3557;">最新号を読む</a> ・ <a href="{site_url}archive/" style="color:#1d3557;">バックナンバー一覧</a>
+            </div>
+          </div>
+          """
+
+          recipients = [addr.strip() for addr in to_raw.split(",") if addr.strip()]
+          msg = EmailMessage()
+          msg["Subject"] = f"📚 【東京逍遥録】本日の日刊誌（{issue_date}号・特集：{ward_val}）が届きました"
+          msg["From"] = f"THE TOKYO FLÂNEUR <{gmail_user}>"
+          msg["To"] = ", ".join(recipients)
+          msg.set_content(f"東京逍遥録 ({issue_date}号・特集：{ward_val}) が発行されました。\n以下のURLからご覧ください：\n{site_url}")
+          msg.add_alternative(html_body, subtype="html")
+
+          with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+              smtp.login(gmail_user, gmail_pass)
+              smtp.send_message(msg)
+          print(f"✅ ダイジェストメール送信完了: {recipients}")
+          EOF
+name: Publish Daily Magazine
+
+on:
+  schedule:
+    - cron: '27 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U google-genai requests pillow
+
+      - name: Generate Issue
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python generate_issue.py
+
+      - name: Commit article and photos
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          printf "node_modules/\ndist/\n.astro/\n" > .gitignore
+          git rm -r --cached node_modules dist .astro 2>/dev/null || true
+          git add .gitignore src/content/ public/images/
+          git add -u
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto-publish daily issue [skip ci]"
+            git pull --rebase origin main
+            git push origin main
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build Astro site
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
