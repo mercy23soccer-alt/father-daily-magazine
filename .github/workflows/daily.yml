@@ -32,10 +32,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies
+      - name: Install Python tools
         run: |
           python -m pip install --upgrade pip
-          pip install google-genai requests pillow
+          pip install -U google-genai requests pillow
 
       - name: Generate Issue
         env:
@@ -47,13 +47,20 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -A
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-publish daily issue [skip ci]" && git push origin main)
+          printf "node_modules/\ndist/\n.astro/\n" > .gitignore
+          git rm -r --cached node_modules dist .astro 2>/dev/null || true
+          git add .gitignore src/content/ public/images/
+          git add -u
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto-publish daily issue [skip ci]"
+            git pull --rebase origin main
+            git push origin main
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
 
       - name: Install Node dependencies
         run: npm install
